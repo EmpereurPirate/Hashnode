@@ -27,11 +27,14 @@ const HOSTNAME = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST; // Variable 
 const STATIC_PAGE_ID = process.env.NEXT_PUBLIC_STATIC_PAGE_ID || ""; // ID de la page statique
 
 // Définir un type pour la réponse GraphQL des publications
-interface PageResponse {
-    post: {
-        title: string;
-        content: {
-            html: string; // Ajout du sous-champ `html` pour le contenu
+interface StaticPageResponse {
+    publication: {
+        staticPage: {
+            id: string;
+            title: string;
+            content: {
+                html: string; // Ajout du sous-champ `html` pour le contenu
+            };
         };
     };
 }
@@ -134,20 +137,23 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
     }
 
     // Requête pour récupérer la page statique avec un ID dynamique
-    const pageQuery = `
+    const staticPageQuery = `
     query {
-      post(id: "${STATIC_PAGE_ID}") {
-        title
-        content {
-          html
+      publication(host: "${HOSTNAME}") {
+        staticPage(id: "${STATIC_PAGE_ID}") {
+          id
+          title
+          content {
+            html
+          }
         }
       }
     }
   `;
     try {
-        const pageData = await request<PageResponse>(GQL_ENDPOINT, pageQuery); // Cast the response to PageResponse
+        const staticPageData = await request<StaticPageResponse>(GQL_ENDPOINT, staticPageQuery); // Cast the response to StaticPageResponse
 
-        if (!pageData.post) {
+        if (!staticPageData.publication?.staticPage) {
             console.error("La page statique avec l'ID spécifié n'a pas été trouvée.");
             return {
                 notFound: true,
@@ -165,8 +171,8 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
             props: {
                 publication,
                 page: {
-                    title: pageData.post.title,
-                    content: pageData.post.content.html, // Utiliser le sous-champ `html`
+                    title: staticPageData.publication.staticPage.title,
+                    content: staticPageData.publication.staticPage.content.html, // Utiliser le sous-champ `html`
                 },
                 initialPageInfo: publication.posts.pageInfo,
             },
