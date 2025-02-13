@@ -24,7 +24,7 @@ import {
 
 const GQL_ENDPOINT = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
 const HOSTNAME = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST; // Variable pour le hostname
-const STATIC_PAGE_ID = process.env.NEXT_PUBLIC_STATIC_PAGE_ID || "your-page-id"; // ID de la page statique
+const STATIC_PAGE_ID = process.env.NEXT_PUBLIC_STATIC_PAGE_ID || ""; // ID de la page statique
 
 // Définir un type pour la réponse GraphQL des publications
 interface PageResponse {
@@ -125,6 +125,14 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
         },
     );
 
+    // Vérifier si l'ID de la page statique est défini
+    if (!STATIC_PAGE_ID) {
+        console.error("L'ID de la page statique (NEXT_PUBLIC_STATIC_PAGE_ID) n'est pas défini.");
+        return {
+            notFound: true,
+        };
+    }
+
     // Requête pour récupérer la page statique avec un ID dynamique
     const pageQuery = `
     query {
@@ -136,24 +144,38 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
       }
     }
   `;
-    const pageData = await request<PageResponse>(GQL_ENDPOINT, pageQuery); // Cast the response to PageResponse
+    try {
+        const pageData = await request<PageResponse>(GQL_ENDPOINT, pageQuery); // Cast the response to PageResponse
 
-    const publication = publicationData.publication;
-    if (!publication) {
+        if (!pageData.post) {
+            console.error("La page statique avec l'ID spécifié n'a pas été trouvée.");
+            return {
+                notFound: true,
+            };
+        }
+
+        const publication = publicationData.publication;
+        if (!publication) {
+            return {
+                notFound: true,
+            };
+        }
+
+        return {
+            props: {
+                publication,
+                page: {
+                    title: pageData.post.title,
+                    content: pageData.post.content.html, // Utiliser le sous-champ `html`
+                },
+                initialPageInfo: publication.posts.pageInfo,
+            },
+            revalidate: 1,
+        };
+    } catch (error) {
+        console.error("Erreur lors de la récupération de la page statique :", error);
         return {
             notFound: true,
         };
     }
-
-    return {
-        props: {
-            publication,
-            page: {
-                title: pageData.post.title,
-                content: pageData.post.content.html, // Utiliser le sous-champ `html`
-            },
-            initialPageInfo: publication.posts.pageInfo,
-        },
-        revalidate: 1,
-    };
 };
