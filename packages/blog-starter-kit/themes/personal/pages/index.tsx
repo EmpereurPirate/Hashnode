@@ -24,13 +24,15 @@ import {
 
 const GQL_ENDPOINT = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
 const HOSTNAME = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST; // Variable pour le hostname
-const STATIC_PAGE_SLUG = process.env.NEXT_PUBLIC_STATIC_PAGE_SLUG || "home"; // Variable pour le slug
+const STATIC_PAGE_ID = process.env.NEXT_PUBLIC_STATIC_PAGE_ID || "your-page-id"; // ID de la page statique
 
 // Définir un type pour la réponse GraphQL des publications
 interface PageResponse {
     post: {
         title: string;
-        content: string;
+        content: {
+            html: string; // Ajout du sous-champ `html` pour le contenu
+        };
     };
 }
 
@@ -123,12 +125,14 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
         },
     );
 
-    // Requête pour récupérer la page statique avec un slug dynamique
+    // Requête pour récupérer la page statique avec un ID dynamique
     const pageQuery = `
     query {
-      post(slug: "${STATIC_PAGE_SLUG}", hostname: "${HOSTNAME}") {
+      post(id: "${STATIC_PAGE_ID}") {
         title
-        content
+        content {
+          html
+        }
       }
     }
   `;
@@ -144,7 +148,10 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
     return {
         props: {
             publication,
-            page: pageData.post, // Maintenant TypeScript connaît le type de `pageData.post`
+            page: {
+                title: pageData.post.title,
+                content: pageData.post.content.html, // Utiliser le sous-champ `html`
+            },
             initialPageInfo: publication.posts.pageInfo,
         },
         revalidate: 1,
