@@ -24,7 +24,7 @@ import {
 
 const GQL_ENDPOINT = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
 const HOSTNAME = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST; // Variable pour le hostname
-const STATIC_PAGE_ID = process.env.NEXT_PUBLIC_STATIC_PAGE_ID || ""; // ID de la page statique
+const STATIC_PAGE_SLUG = process.env.NEXT_PUBLIC_STATIC_PAGE_SLUG || ""; // Slug de la page statique
 
 // Définir un type pour la réponse GraphQL des publications
 interface StaticPageResponse {
@@ -128,19 +128,19 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
         },
     );
 
-    // Vérifier si l'ID de la page statique est défini
-    if (!STATIC_PAGE_ID) {
-        console.error("L'ID de la page statique (NEXT_PUBLIC_STATIC_PAGE_ID) n'est pas défini.");
+    // Vérifier si le slug de la page statique est défini
+    if (!STATIC_PAGE_SLUG) {
+        console.error("Le slug de la page statique (NEXT_PUBLIC_STATIC_PAGE_SLUG) n'est pas défini.");
         return {
             notFound: true,
         };
     }
 
-    // Requête pour récupérer la page statique avec un ID dynamique
+    // Requête pour récupérer la page statique avec un slug dynamique
     const staticPageQuery = `
     query {
       publication(host: "${HOSTNAME}") {
-        staticPage(id: "${STATIC_PAGE_ID}") {
+        staticPage(slug: "${STATIC_PAGE_SLUG}") {
           id
           title
           content {
@@ -154,7 +154,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
         const staticPageData = await request<StaticPageResponse>(GQL_ENDPOINT, staticPageQuery); // Cast the response to StaticPageResponse
 
         if (!staticPageData.publication?.staticPage) {
-            console.error("La page statique avec l'ID spécifié n'a pas été trouvée.");
+            console.error("La page statique avec le slug spécifié n'a pas été trouvée.");
             return {
                 notFound: true,
             };
