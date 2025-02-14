@@ -101,8 +101,11 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
                 <Container className="mx-auto flex max-w-3xl flex-col items-stretch gap-10 px-5 py-10">
                     <PersonalHeader />
                     <div>
-                        <h1>{page.title}</h1>
-                        <div dangerouslySetInnerHTML={{ __html: page.content }} />
+                        <h1 className="text-4xl font-bold mb-6">{page.title}</h1>
+                        <div
+                            className="prose lg:prose-xl"
+                            dangerouslySetInnerHTML={{ __html: page.content }}
+                        />
                     </div>
                     {!loadedMore && pageInfo.hasNextPage && pageInfo.endCursor && (
                         <button onClick={loadMore}>Load more</button>
