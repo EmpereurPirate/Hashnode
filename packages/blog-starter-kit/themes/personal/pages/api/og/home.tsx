@@ -16,13 +16,13 @@ const fontMedium = fetch(new URL('../../../assets/PlusJakartaSans-Medium.ttf', i
 );
 const fontSemiBold = fetch(
     new URL('../../../assets/PlusJakartaSans-SemiBold.ttf', import.meta.url),
-).then((res) => res.arrayBuffer());
-const fontBold = fetch(new URL('../../../assets/PlusJakartaSans-Bold.ttf', import.meta.url)).then((res) =>
-    res.arrayBuffer(),
-);
-const fontExtraBold = fetch(
-    new URL('../../../assets/PlusJakartaSans-ExtraBold.ttf', import.meta.url),
-).then((res) => res.arrayBuffer());
+).then((res) => res.arrayBuffer()),
+    fontBold = fetch(new URL('../../../assets/PlusJakartaSans-Bold.ttf', import.meta.url)).then((res) =>
+        res.arrayBuffer(),
+    ),
+    fontExtraBold = fetch(
+        new URL('../../../assets/PlusJakartaSans-ExtraBold.ttf', import.meta.url),
+    ).then((res) => res.arrayBuffer());
 
 const kFormatter = (num: number) => {
     return num > 999 ? `${(num / 1000).toFixed(1)}K` : num;
