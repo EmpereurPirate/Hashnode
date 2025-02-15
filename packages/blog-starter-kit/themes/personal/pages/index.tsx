@@ -10,6 +10,7 @@ import { AppProvider } from '../components/contexts/appContext';
 import { Footer } from '../components/footer';
 import { Layout } from '../components/layout';
 import { PersonalHeader } from '../components/personal-theme-header';
+import Image from 'next/image'; // Importation de Image
 import {
     MorePostsByPublicationDocument,
     MorePostsByPublicationQuery,
@@ -54,7 +55,6 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
 
     // Ajouter les dépendances manquantes pour useEffect
     useEffect(() => {
-        // Exemple d'effet secondaire (si nécessaire)
         console.log('Page info updated:', pageInfo);
     }, [pageInfo]);
 
@@ -124,6 +124,13 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
                         <Waypoint onEnter={loadMore} bottomOffset={'10%'} />
                     )}
                     <Footer />
+                    {/* Exemple d'utilisation de <Image /> */}
+                    <Image
+                        src="/profile.jpg"
+                        alt="Photo de profil"
+                        width={300}
+                        height={300}
+                    />
                 </Container>
             </Layout>
         </AppProvider>
@@ -131,7 +138,6 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
 }
 
 export const getStaticProps: GetStaticProps<Props> = async () => {
-    // Requête pour récupérer les informations de la publication
     try {
         const publicationData = await request<PostsByPublicationQuery, PostsByPublicationQueryVariables>(
             GQL_ENDPOINT!,
@@ -142,7 +148,6 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
             },
         );
 
-        // Vérifier si le slug de la page statique est défini
         if (!STATIC_PAGE_SLUG) {
             console.error("Le slug de la page statique (NEXT_PUBLIC_STATIC_PAGE_SLUG) n'est pas défini.");
             return {
@@ -150,7 +155,6 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
             };
         }
 
-        // Requête pour récupérer la page statique avec un slug dynamique
         const staticPageQuery = `
             query {
                 publication(host: "${HOSTNAME}") {
@@ -186,7 +190,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
                 publication,
                 page: {
                     title: staticPageData.publication.staticPage.title,
-                    content: staticPageData.publication.staticPage.content.html, // Utiliser le sous-champ `html`
+                    content: staticPageData.publication.staticPage.content.html,
                 },
                 initialPageInfo: publication.posts.pageInfo,
             },
