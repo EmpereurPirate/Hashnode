@@ -118,47 +118,49 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
 }
 
 export const getStaticProps: GetStaticProps<Props> = async () => {
-    // Requête pour récupérer les informations de la publication
-    const publicationData = await request(
-        GQL_ENDPOINT,
-        `
+    try {
+        // Requête pour récupérer les informations de la publication
+        const publicationData = await request<{
+            publication: PublicationFragment;
+        }>(
+            GQL_ENDPOINT,
+            `
+        query {
+          publication(host: "${HOSTNAME}") {
+            posts(first: 20) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+            }
+          }
+        }
+      `,
+        );
+
+        // Vérifier si le slug de la page statique est défini
+        if (!STATIC_PAGE_SLUG) {
+            console.error("Le slug de la page statique (NEXT_PUBLIC_STATIC_PAGE_SLUG) n'est pas défini.");
+            return {
+                notFound: true,
+            };
+        }
+
+        // Requête pour récupérer la page statique avec un slug dynamique
+        const staticPageQuery = `
       query {
         publication(host: "${HOSTNAME}") {
-          posts(first: 20) {
-            pageInfo {
-              hasNextPage
-              endCursor
+          staticPage(slug: "${STATIC_PAGE_SLUG}") {
+            id
+            title
+            content {
+              html
             }
           }
         }
       }
-    `,
-    );
-
-    // Vérifier si le slug de la page statique est défini
-    if (!STATIC_PAGE_SLUG) {
-        console.error("Le slug de la page statique (NEXT_PUBLIC_STATIC_PAGE_SLUG) n'est pas défini.");
-        return {
-            notFound: true,
-        };
-    }
-
-    // Requête pour récupérer la page statique avec un slug dynamique
-    const staticPageQuery = `
-    query {
-      publication(host: "${HOSTNAME}") {
-        staticPage(slug: "${STATIC_PAGE_SLUG}") {
-          id
-          title
-          content {
-            html
-          }
-        }
-      }
-    }
-  `;
-    try {
-        const staticPageData = await request<StaticPageResponse>(GQL_ENDPOINT, staticPageQuery); // Cast the response to StaticPageResponse
+    `;
+        const staticPageData = await request<StaticPageResponse>(GQL_ENDPOINT, staticPageQuery);
 
         if (!staticPageData.publication?.staticPage) {
             console.error("La page statique avec le slug spécifié n'a pas été trouvée.");
@@ -179,7 +181,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
                 publication,
                 page: {
                     title: staticPageData.publication.staticPage.title,
-                    content: staticPageData.publication.staticPage.content.html, // Utiliser le sous-champ `html`
+                    content: staticPageData.publication.staticPage.content.html,
                 },
                 initialPageInfo: publication.posts.pageInfo,
             },
