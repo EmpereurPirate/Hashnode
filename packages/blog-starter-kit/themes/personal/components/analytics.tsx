@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppContext } from './contexts/appContext';
 
@@ -18,7 +18,7 @@ export const Analytics = () => {
     const { publication, post, page } = useAppContext();
 
     // Fonction pour envoyer des données à Google Analytics
-    const _sendPageViewsToHashnodeGoogleAnalytics = () => {
+    const _sendPageViewsToHashnodeGoogleAnalytics = useCallback(() => {
         if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
             window.gtag('config', GA_TRACKING_ID, {
                 transport_url: 'https://ping.hashnode.com',
@@ -27,12 +27,25 @@ export const Analytics = () => {
         } else {
             console.warn('Google Analytics (gtag) is not available.');
         }
-    };
+    }, []);
 
     // Fonction pour envoyer des données à Hashnode Internal Analytics
-    const _sendViewsToHashnodeInternalAnalytics = async () => {
+    const _sendViewsToHashnodeInternalAnalytics = useCallback(async () => {
         try {
-            const event = {
+            // Typage explicite pour l'objet event
+            const event: {
+                event_type: string;
+                time: number;
+                event_properties: {
+                    hostname: string;
+                    url: string;
+                    eventType: string;
+                    publicationId: string;
+                    dateAdded: number;
+                    referrer: string;
+                };
+                device_id?: string; // Ajout de device_id comme optionnel
+            } = {
                 event_type: 'pageview',
                 time: new Date().getTime(),
                 event_properties: {
@@ -52,7 +65,7 @@ export const Analytics = () => {
                     expires: 365 * 2, // expire after two years
                 });
             }
-            event['device_id'] = deviceId;
+            event.device_id = deviceId;
 
             await fetch(`${BASE_PATH}/ping/data-event`, {
                 method: 'POST',
@@ -64,10 +77,10 @@ export const Analytics = () => {
         } catch (error) {
             console.error('Error sending views to Hashnode internal analytics:', error);
         }
-    };
+    }, [publication]);
 
     // Fonction pour envoyer des données au tableau de bord avancé
-    function _sendViewsToAdvancedAnalyticsDashboard() {
+    const _sendViewsToAdvancedAnalyticsDashboard = useCallback(() => {
         const publicationId = publication?.id;
         const postId = post?.id;
         const staticPageId = page?.id;
@@ -134,7 +147,7 @@ export const Analytics = () => {
                 console.error('Error sending analytics via fetch:', error);
             });
         }
-    }
+    }, [publication, post, page]);
 
     // Hook useEffect avec les dépendances nécessaires
     useEffect(() => {
@@ -144,9 +157,7 @@ export const Analytics = () => {
         _sendViewsToHashnodeInternalAnalytics();
         _sendViewsToAdvancedAnalyticsDashboard();
     }, [
-        publication,
-        post,
-        page,
+        isProd,
         _sendPageViewsToHashnodeGoogleAnalytics,
         _sendViewsToHashnodeInternalAnalytics,
         _sendViewsToAdvancedAnalyticsDashboard,
