@@ -3,6 +3,13 @@ import { useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppContext } from './contexts/appContext';
 
+// Étendre l'interface Window pour inclure gtag
+declare global {
+    interface Window {
+        gtag?: (...args: any[]) => void;
+    }
+}
+
 const GA_TRACKING_ID = 'G-72XG3F8LNJ'; // This is Hashnode's GA tracking ID
 const isProd = process.env.NEXT_PUBLIC_MODE === 'production';
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_URL || '';
@@ -10,6 +17,7 @@ const BASE_PATH = process.env.NEXT_PUBLIC_BASE_URL || '';
 export const Analytics = () => {
     const { publication, post, page } = useAppContext();
 
+    // Fonction pour envoyer des données à Google Analytics
     const _sendPageViewsToHashnodeGoogleAnalytics = () => {
         if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
             window.gtag('config', GA_TRACKING_ID, {
@@ -21,6 +29,7 @@ export const Analytics = () => {
         }
     };
 
+    // Fonction pour envoyer des données à Hashnode Internal Analytics
     const _sendViewsToHashnodeInternalAnalytics = async () => {
         try {
             const event = {
@@ -57,6 +66,7 @@ export const Analytics = () => {
         }
     };
 
+    // Fonction pour envoyer des données au tableau de bord avancé
     function _sendViewsToAdvancedAnalyticsDashboard() {
         const publicationId = publication?.id;
         const postId = post?.id;
@@ -126,13 +136,21 @@ export const Analytics = () => {
         }
     }
 
+    // Hook useEffect avec les dépendances nécessaires
     useEffect(() => {
         if (!isProd) return;
 
         _sendPageViewsToHashnodeGoogleAnalytics();
         _sendViewsToHashnodeInternalAnalytics();
         _sendViewsToAdvancedAnalyticsDashboard();
-    }, [publication, post, page]); // Ajout des dépendances nécessaires
+    }, [
+        publication,
+        post,
+        page,
+        _sendPageViewsToHashnodeGoogleAnalytics,
+        _sendViewsToHashnodeInternalAnalytics,
+        _sendViewsToAdvancedAnalyticsDashboard,
+    ]);
 
     return null;
 };
