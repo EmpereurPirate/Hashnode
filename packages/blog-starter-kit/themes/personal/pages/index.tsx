@@ -136,6 +136,10 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
             ogMetaData {
               image
             }
+            navbarItems {
+              title
+              url
+            }
           }
         }
       `,
@@ -182,6 +186,14 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
         // Vérifier que `ogMetaData.image` existe
         if (!publication.ogMetaData?.image) {
             console.error("L'image OG n'est pas définie pour cette publication.");
+            return {
+                notFound: true,
+            };
+        }
+
+        // Vérifier que `navbarItems` existe
+        if (!publication.navbarItems || publication.navbarItems.length === 0) {
+            console.error("Les éléments de la barre de navigation ne sont pas définis pour cette publication.");
             return {
                 notFound: true,
             };
