@@ -121,7 +121,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
     try {
         // Requête pour récupérer les informations de la publication
         const publicationData = await request<{
-            publication: PublicationFragment;
+            publication: PublicationFragment & { posts: { pageInfo: PageInfoFragment } };
         }>(
             GQL_ENDPOINT,
             `
