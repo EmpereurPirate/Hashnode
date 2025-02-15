@@ -37,7 +37,7 @@ interface StaticPageResponse {
 }
 
 type Props = {
-    publication: PublicationFragment;
+    publication: PublicationFragment & { navbarItems?: { title: string; url: string }[] }; // Ajouter navbarItems au type
     page: {
         title: string;
         content: string;
@@ -121,7 +121,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
     try {
         // Requête pour récupérer les informations de la publication
         const publicationData = await request<{
-            publication: PublicationFragment & { posts: { pageInfo: PageInfoFragment } };
+            publication: PublicationFragment & { posts: { pageInfo: PageInfoFragment }; navbarItems?: { title: string; url: string }[] };
         }>(
             GQL_ENDPOINT,
             `
