@@ -55,23 +55,31 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
     // Ajouter les dépendances manquantes pour useEffect
     useEffect(() => {
         // Exemple d'effet secondaire (si nécessaire)
+        console.log('Page info updated:', pageInfo);
     }, [pageInfo]);
 
     const loadMore = async () => {
-        const data = await request<MorePostsByPublicationQuery, MorePostsByPublicationQueryVariables>(
-            GQL_ENDPOINT,
-            MorePostsByPublicationDocument,
-            {
-                first: 20,
-                host: HOSTNAME,
-                after: pageInfo.endCursor,
-            },
-        );
-        if (!data.publication) {
-            return;
+        try {
+            const data = await request<MorePostsByPublicationQuery, MorePostsByPublicationQueryVariables>(
+                GQL_ENDPOINT!,
+                MorePostsByPublicationDocument,
+                {
+                    first: 20,
+                    host: HOSTNAME!,
+                    after: pageInfo.endCursor,
+                },
+            );
+
+            if (!data.publication) {
+                console.error("La publication n'a pas été trouvée lors du chargement de plus de posts.");
+                return;
+            }
+
+            setPageInfo(data.publication.posts.pageInfo);
+            setLoadedMore(true);
+        } catch (error) {
+            console.error("Erreur lors du chargement de plus de posts :", error);
         }
-        setPageInfo(data.publication.posts.pageInfo);
-        setLoadedMore(true);
     };
 
     return (
@@ -108,7 +116,9 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
                         />
                     </div>
                     {!loadedMore && pageInfo.hasNextPage && pageInfo.endCursor && (
-                        <button onClick={loadMore}>Load more</button>
+                        <button onClick={loadMore} className="bg-blue-500 text-white p-2 rounded">
+                            Charger plus
+                        </button>
                     )}
                     {loadedMore && pageInfo.hasNextPage && pageInfo.endCursor && (
                         <Waypoint onEnter={loadMore} bottomOffset={'10%'} />
@@ -122,39 +132,40 @@ export default function Index({ publication, page, initialPageInfo }: Props) {
 
 export const getStaticProps: GetStaticProps<Props> = async () => {
     // Requête pour récupérer les informations de la publication
-    const publicationData = await request<PostsByPublicationQuery, PostsByPublicationQueryVariables>(
-        GQL_ENDPOINT,
-        PostsByPublicationDocument,
-        {
-            first: 20,
-            host: HOSTNAME,
-        },
-    );
-
-    // Vérifier si le slug de la page statique est défini
-    if (!STATIC_PAGE_SLUG) {
-        console.error("Le slug de la page statique (NEXT_PUBLIC_STATIC_PAGE_SLUG) n'est pas défini.");
-        return {
-            notFound: true,
-        };
-    }
-
-    // Requête pour récupérer la page statique avec un slug dynamique
-    const staticPageQuery = `
-    query {
-      publication(host: "${HOSTNAME}") {
-        staticPage(slug: "${STATIC_PAGE_SLUG}") {
-          id
-          title
-          content {
-            html
-          }
-        }
-      }
-    }
-  `;
     try {
-        const staticPageData = await request<StaticPageResponse>(GQL_ENDPOINT, staticPageQuery); // Cast the response to StaticPageResponse
+        const publicationData = await request<PostsByPublicationQuery, PostsByPublicationQueryVariables>(
+            GQL_ENDPOINT!,
+            PostsByPublicationDocument,
+            {
+                first: 20,
+                host: HOSTNAME!,
+            },
+        );
+
+        // Vérifier si le slug de la page statique est défini
+        if (!STATIC_PAGE_SLUG) {
+            console.error("Le slug de la page statique (NEXT_PUBLIC_STATIC_PAGE_SLUG) n'est pas défini.");
+            return {
+                notFound: true,
+            };
+        }
+
+        // Requête pour récupérer la page statique avec un slug dynamique
+        const staticPageQuery = `
+            query {
+                publication(host: "${HOSTNAME}") {
+                    staticPage(slug: "${STATIC_PAGE_SLUG}") {
+                        id
+                        title
+                        content {
+                            html
+                        }
+                    }
+                }
+            }
+        `;
+
+        const staticPageData = await request<StaticPageResponse>(GQL_ENDPOINT!, staticPageQuery);
 
         if (!staticPageData.publication?.staticPage) {
             console.error("La page statique avec le slug spécifié n'a pas été trouvée.");
@@ -182,7 +193,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
             revalidate: 1,
         };
     } catch (error) {
-        console.error("Erreur lors de la récupération de la page statique :", error);
+        console.error("Erreur lors de la récupération des données :", error);
         return {
             notFound: true,
         };
