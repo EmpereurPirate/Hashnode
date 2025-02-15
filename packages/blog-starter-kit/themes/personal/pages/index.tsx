@@ -37,7 +37,7 @@ interface StaticPageResponse {
 }
 
 type Props = {
-    publication: PublicationFragment & { navbarItems?: { title: string; url: string }[] }; // Ajouter navbarItems au type
+    publication: PublicationFragment;
     page: {
         title: string;
         content: string;
@@ -121,7 +121,7 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
     try {
         // Requête pour récupérer les informations de la publication
         const publicationData = await request<{
-            publication: PublicationFragment & { posts: { pageInfo: PageInfoFragment }; navbarItems?: { title: string; url: string }[] };
+            publication: PublicationFragment & { posts: { pageInfo: PageInfoFragment } };
         }>(
             GQL_ENDPOINT,
             `
@@ -135,10 +135,6 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
             }
             ogMetaData {
               image
-            }
-            navbarItems {
-              title
-              url
             }
           }
         }
@@ -186,14 +182,6 @@ export const getStaticProps: GetStaticProps<Props> = async () => {
         // Vérifier que `ogMetaData.image` existe
         if (!publication.ogMetaData?.image) {
             console.error("L'image OG n'est pas définie pour cette publication.");
-            return {
-                notFound: true,
-            };
-        }
-
-        // Vérifier que `navbarItems` existe
-        if (!publication.navbarItems || publication.navbarItems.length === 0) {
-            console.error("Les éléments de la barre de navigation ne sont pas définis pour cette publication.");
             return {
                 notFound: true,
             };
