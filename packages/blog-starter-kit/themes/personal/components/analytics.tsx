@@ -149,7 +149,7 @@ export const Analytics = () => {
         }
     }, [publication, post, page]);
 
-    // Hook useEffect avec les dépendances nécessaires
+    // Hook useEffect sans inclure `isProd` dans les dépendances
     useEffect(() => {
         if (!isProd) return;
 
@@ -157,7 +157,6 @@ export const Analytics = () => {
         _sendViewsToHashnodeInternalAnalytics();
         _sendViewsToAdvancedAnalyticsDashboard();
     }, [
-        isProd,
         _sendPageViewsToHashnodeGoogleAnalytics,
         _sendViewsToHashnodeInternalAnalytics,
         _sendViewsToAdvancedAnalyticsDashboard,
